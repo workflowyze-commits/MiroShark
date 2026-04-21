@@ -1,25 +1,20 @@
-# Use a slim version of Python 3.11 (saves ~800MB)
-FROM python:3.11-slim
+# Using the standard version instead of "slim" to avoid connection errors
+FROM python:3.11
 
-# Install light system dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    git \
-    && rm -rf /var/lib/apt/lists/*
-
+# Set the working directory
 WORKDIR /app
 
-# Copy only the requirement files first to save build time
+# Copy the requirements file we just made
 COPY requirements.txt .
 
-# Install CPU-only versions of AI libraries (This is the secret to 4.8GB -> 1.2GB)
+# Install the lightweight CPU version of AI tools
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the engine
+# Copy the rest of your business logic
 COPY . .
 
-# Expose the ports for WorkfloWyze
+# Open the ports
 EXPOSE 3000
 EXPOSE 5001
 
