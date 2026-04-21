@@ -1,0 +1,9 @@
+neo4j
+openai
+python-dotenv
+flask
+flask-cors
+requests
+numpy
+pandas
+torch
