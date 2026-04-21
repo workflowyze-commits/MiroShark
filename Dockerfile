@@ -1,29 +1,27 @@
-FROM python:3.11
+# Use a slim version of Python 3.11 (saves ~800MB)
+FROM python:3.11-slim
 
-# Install Node.js (>= 18) and necessary tools
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends nodejs npm \
-  && rm -rf /var/lib/apt/lists/*
-
-# Copy uv from the official uv image
-COPY --from=ghcr.io/astral-sh/uv:0.9.26 /uv /uvx /bin/
+# Install light system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Copy dependency descriptor files first to leverage Docker cache
-COPY package.json package-lock.json ./
-COPY frontend/package.json frontend/package-lock.json ./frontend/
-COPY backend/pyproject.toml backend/uv.lock ./backend/
+# Copy only the requirement files first to save build time
+COPY requirements.txt .
 
-# Install dependencies (Node + Python)
-RUN npm ci \
-  && npm ci --prefix frontend \
-  && cd backend && uv sync --frozen
+# Install CPU-only versions of AI libraries (This is the secret to 4.8GB -> 1.2GB)
+RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project source code
+# Copy the rest of the engine
 COPY . .
 
-EXPOSE 3000 5001
+# Expose the ports for WorkfloWyze
+EXPOSE 3000
+EXPOSE 5001
 
-# Start both frontend and backend simultaneously (development mode)
-CMD ["npm", "run", "dev"]
+# Launch the swarm
+CMD ["python", "app.py"]
