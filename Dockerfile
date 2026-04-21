@@ -1,22 +1,21 @@
-# Use the slimmest version of Python available
+# 1. Use a slim Python engine to keep the business lightweight and under 500MB
 FROM python:3.11-slim
 
-# Set the working directory
-WORKDIR /app
-
-# Install only the absolute system essentials
+# 2. Install basic internet tools (curl) for system health checks
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
-# BYPASS: Install the tools directly in the command line (No requirements.txt needed)
-# Notice: 'torch' is removed to keep the size under 500MB
-RUN pip install --no-cache-dir neo4j openai python-dotenv flask flask-cors requests numpy pandas
-
-# Copy all your code into the engine
+# 3. THE MASTER COMMAND: This copies EVERYTHING from your GitHub 
+# (including the /backend folder) into the cloud engine. 
+# This is how the agents "see" the whole project.
 COPY . .
 
-# Open the ports for WorkfloWyze
+# 4. DIRECT INSTALL: We bypass both requirements.txt files to avoid confusion.
+# This installs the memory (neo4j), the brain (openai), and the web tools.
+RUN pip install --no-cache-dir neo4j openai python-dotenv flask flask-cors requests numpy pandas
+
+# 5. Open the communication ports for your website and the agents
 EXPOSE 3000
 EXPOSE 5001
 
-# Launch the swarm
+# 6. START: This hits the master switch (app.py) sitting in your root folder.
 CMD ["python", "app.py"]
