@@ -1,20 +1,20 @@
-# Using the standard version instead of "slim" to avoid connection errors
-FROM python:3.11
+# Use the slimmest version of Python available
+FROM python:3.11-slim
 
 # Set the working directory
 WORKDIR /app
 
-# Copy the requirements file we just made
-COPY requirements.txt .
+# Install only the absolute system essentials
+RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/*
 
-# Install the lightweight CPU version of AI tools
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
-RUN pip install --no-cache-dir -r requirements.txt
+# BYPASS: Install the tools directly in the command line (No requirements.txt needed)
+# Notice: 'torch' is removed to keep the size under 500MB
+RUN pip install --no-cache-dir neo4j openai python-dotenv flask flask-cors requests numpy pandas
 
-# Copy the rest of your business logic
+# Copy all your code into the engine
 COPY . .
 
-# Open the ports
+# Open the ports for WorkfloWyze
 EXPOSE 3000
 EXPOSE 5001
 
